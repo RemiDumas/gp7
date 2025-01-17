@@ -1,11 +1,67 @@
 ---
 title: "Google Pixel 7"
+format: 
+  dashboard:
+    theme: spacelab
+server: shiny
 ---
 
-## Quarto
+```{r}
+#| context: setup
+library('dplyr')
+library('ggplot2')
+library('readxl')
+library('gt')
 
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+data <- readxl::read_xlsx("Google Pixel 7.xlsx")
+```
+
+# {.sidebar}
 
 ```{r}
-1 + 1
+selectizeInput('appareil', 
+            'Appareil', 
+            choices = unique(data$Appareil),
+            selected = unique(data$Appareil)[1]
+            )
+br()
+```
+
+# Plot
+
+```{r}
+plotOutput('plot')
+```
+
+# Data
+
+```{r}
+tableOutput('data')
+```
+
+
+
+```{r}
+#| context: server
+
+dataset <- reactive({
+  data %>% 
+    filter(Appareil == input$appareil)
+})
+ 
+output$plot <- renderPlot({
+  ggplot(
+    data = dataset(), 
+    mapping = aes(x = Date, y = Prix, color = Couleur, linetype = Etat)
+    ) +
+    geom_line() +
+    geom_point(color = "black") +
+    scale_color_manual(values = c("Blanc" = "white", "Noir" = "black", "Vert" = "lightgreen"))
+  
+})
+ 
+output$data <- renderTable({
+  dataset() %>% 
+    gt()
+})
 ```
